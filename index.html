@@ -43,6 +43,7 @@
         <button class="nav-btn active" data-page="home"   onclick="showHome()">Browse</button>
         <button class="nav-btn"        data-page="stats"  onclick="showStats()">Stats</button>
         <button class="nav-btn"        data-page="recent" onclick="showRecent()">Recent</button>
+        <button class="nav-btn"        data-page="about"  onclick="showAbout()">About</button>
         <button class="nav-btn upload-nav-btn" onclick="handleUploadClick()">+ Upload</button>
       </nav>
       <div id="admin-badge-wrap" style="display:none;" class="admin-badge-wrap">
@@ -204,6 +205,77 @@
       </div>
     </div>
 
+
+    <!-- ABOUT -->
+    <div id="page-about" class="page" style="display:none;">
+      <div class="static-page-wrap">
+        <div class="section-label">About Us</div>
+        <h2 class="static-title">About PaperVault</h2>
+        <div class="static-body">
+          <p>PaperVault is a free, community-driven archive of past exam papers, sample papers, and practice questions for Indian students. Our mission is simple: make quality study material accessible to every student, regardless of their background or location.</p>
+
+          <h3>What We Offer</h3>
+          <p>We cover all major Indian exams including Class 10 and Class 12 Boards (CBSE and State), JEE Mains, JEE Advanced, and NEET. For each exam, we provide three types of material:</p>
+          <ul>
+            <li><strong>Past Papers</strong> — Real previous year question papers</li>
+            <li><strong>Sample Papers</strong> — Official model papers released by boards</li>
+            <li><strong>Practice Questions</strong> — Topic-wise practice material</li>
+          </ul>
+
+          <h3>Our Mission</h3>
+          <p>Every year, millions of Indian students prepare for board exams and entrance tests. Access to previous year papers is one of the most effective study strategies, yet many students struggle to find them in one organised place. PaperVault solves that problem — for free, forever.</p>
+
+          <h3>Contact Us</h3>
+          <p>Have a paper to contribute or found an issue? Reach out to us at <a href="mailto:dervrevere@gmail.com" class="static-link">dervrevere@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIVACY POLICY -->
+    <div id="page-privacy" class="page" style="display:none;">
+      <div class="static-page-wrap">
+        <div class="section-label">Legal</div>
+        <h2 class="static-title">Privacy Policy</h2>
+        <p class="static-date">Last updated: March 05, 2026</p>
+        <div class="static-body">
+          <p>This Privacy Policy describes how PaperVault ("we", "us", or "our") collects, uses, and shares information when you visit our website.</p>
+
+          <h3>Information We Collect</h3>
+          <p>We do not require you to create an account or provide personal information to browse or download papers. We may collect the following non-personal data automatically:</p>
+          <ul>
+            <li>Browser type and version</li>
+            <li>Pages visited and time spent on site</li>
+            <li>Referring website</li>
+            <li>General geographic location (country/city level)</li>
+          </ul>
+
+          <h3>Google AdSense &amp; Cookies</h3>
+          <p>We use Google AdSense to display advertisements on our site. Google AdSense uses cookies to serve ads based on your prior visits to our website and other sites on the internet. You can opt out of personalised advertising by visiting <a href="https://www.google.com/settings/ads" class="static-link" target="_blank">Google Ads Settings</a>.</p>
+          <p>Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to our website. Google's use of advertising cookies enables it and its partners to serve ads based on your visit to our site and/or other sites on the internet.</p>
+
+          <h3>How We Use Information</h3>
+          <p>Any data we collect is used solely to improve the site experience, understand traffic patterns, and serve relevant advertisements. We do not sell, trade, or rent your personal information to any third party.</p>
+
+          <h3>Third-Party Services</h3>
+          <p>Our site uses the following third-party services:</p>
+          <ul>
+            <li><strong>Supabase</strong> — for database and file storage. See <a href="https://supabase.com/privacy" class="static-link" target="_blank">Supabase Privacy Policy</a>.</li>
+            <li><strong>Google AdSense</strong> — for displaying advertisements. See <a href="https://policies.google.com/privacy" class="static-link" target="_blank">Google Privacy Policy</a>.</li>
+            <li><strong>Google Fonts</strong> — for typography. Fonts are loaded from Google servers.</li>
+          </ul>
+
+          <h3>Children's Privacy</h3>
+          <p>Our site is intended for students of all ages. We do not knowingly collect personal information from children under 13. If you believe a child has provided us with personal information, please contact us and we will delete it promptly.</p>
+
+          <h3>Changes to This Policy</h3>
+          <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated date. Continued use of the site after changes constitutes acceptance of the new policy.</p>
+
+          <h3>Contact</h3>
+          <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:dervrevere@gmail.com" class="static-link">dervrevere@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- AdSense: footer banner -->
@@ -221,6 +293,11 @@
   <footer>
     <div class="footer-inner">
       <div class="footer-logo">PaperVault</div>
+      <div class="footer-links">
+        <a href="#" onclick="showAbout();return false;" class="footer-link">About</a>
+        <a href="#" onclick="showPrivacy();return false;" class="footer-link">Privacy Policy</a>
+        <a href="mailto:dervrevere@gmail.com" class="footer-link">Contact</a>
+      </div>
       <div class="footer-text">Free exam papers for every Indian student · Powered by Supabase</div>
     </div>
   </footer>

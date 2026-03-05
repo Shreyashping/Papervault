@@ -72,7 +72,7 @@ function showAdminUI(){const w=document.getElementById("admin-badge-wrap");w.sty
 
 function showPage(page){
   currentPage=page;
-  ["home","category","stats","recent","upload"].forEach(p=>{
+  ["home","category","stats","recent","upload","about","privacy"].forEach(p=>{
     const el=document.getElementById("page-"+p);
     if(el){el.style.display=p===page?"block":"none";if(p===page){el.classList.remove("fade-up");void el.offsetWidth;el.classList.add("fade-up");}}
   });
@@ -302,3 +302,7 @@ function setProgress(show,pct,label){
 function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(new Error("Failed to read file"));r.readAsDataURL(file);});}
 function escHtml(str){return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function timeAgo(dateStr){const diff=Date.now()-new Date(dateStr).getTime();const m=Math.floor(diff/60000);if(m<1)return"just now";if(m<60)return m+"m ago";const h=Math.floor(m/60);if(h<24)return h+"h ago";const d=Math.floor(h/24);if(d<30)return d+"d ago";return new Date(dateStr).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});}
+
+// ─── STATIC PAGES ────────────────────────────────────────────
+function showAbout()   { showPage("about");   }
+function showPrivacy() { showPage("privacy"); }

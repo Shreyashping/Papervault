@@ -260,3 +260,21 @@ footer { border-top:1px solid var(--line); background:var(--ink2); padding:28px;
 .ad-slot-top    { margin-bottom: 32px; }
 .ad-slot-mid    { margin: 40px 0; }
 .ad-slot-footer { margin-top: 40px; }
+
+/* ============================================================ STATIC PAGES (About / Privacy) */
+.static-page-wrap { max-width: 720px; }
+.static-title { font-family: var(--fh); font-size: 42px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.static-date  { font-size: 13px; color: var(--text3); margin-bottom: 32px; }
+.static-body  { display: flex; flex-direction: column; gap: 18px; }
+.static-body p  { font-size: 15px; color: var(--text2); line-height: 1.75; }
+.static-body h3 { font-family: var(--fh); font-size: 22px; font-weight: 600; color: #fff; margin-top: 8px; }
+.static-body ul { padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.static-body li { font-size: 15px; color: var(--text2); line-height: 1.65; }
+.static-body strong { color: var(--text); font-weight: 600; }
+.static-link    { color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); transition: border-color .2s; }
+.static-link:hover { border-color: var(--gold); }
+
+/* Footer links */
+.footer-links { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.footer-link  { font-size: 13px; color: var(--text3); text-decoration: none; transition: color .2s; }
+.footer-link:hover { color: var(--gold); }
