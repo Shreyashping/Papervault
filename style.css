@@ -254,3 +254,9 @@ footer { border-top:1px solid var(--line); background:var(--ink2); padding:28px;
   .form-card { padding:20px; }
   .breakdown-total { margin-left:0; }
 }
+
+/* ============================================================ AD SLOTS */
+.ad-slot { margin: 24px 0; min-height: 90px; background: var(--ink2); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.ad-slot-top    { margin-bottom: 32px; }
+.ad-slot-mid    { margin: 40px 0; }
+.ad-slot-footer { margin-top: 40px; }
