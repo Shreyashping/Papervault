@@ -3,24 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PaperVault — Past Papers Archive</title>
+  <title>PaperVault — Exam Papers Archive</title>
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
+  <div class="grain"></div>
+  <div id="toast-container"></div>
 
-  <!-- ADMIN LOGIN MODAL -->
+  <!-- ADMIN MODAL -->
   <div id="admin-modal" style="display:none;">
     <div class="modal-backdrop" onclick="closeAdminModal()"></div>
     <div class="modal-box">
-      <div class="modal-title">🔐 Admin Login</div>
-      <div class="modal-sub">Enter the admin password to continue.</div>
-      <input type="password" id="admin-password-input" class="form-input"
-             placeholder="Enter password…" onkeydown="if(event.key==='Enter')attemptLogin()" />
-      <div id="login-error" class="login-error" style="display:none;">❌ Incorrect password</div>
+      <div class="modal-icon">🔐</div>
+      <div class="modal-title">Admin Access</div>
+      <div class="modal-sub">Enter your password to unlock admin features.</div>
+      <input type="password" id="admin-password-input" class="modal-input" placeholder="Password…" onkeydown="if(event.key==='Enter')attemptLogin()" />
+      <div id="login-error" class="login-error" style="display:none;">Incorrect password. Try again.</div>
       <div class="modal-btns">
         <button class="modal-cancel-btn" onclick="closeAdminModal()">Cancel</button>
-        <button class="modal-login-btn"  onclick="attemptLogin()">Login</button>
+        <button class="modal-login-btn" onclick="attemptLogin()">Unlock →</button>
       </div>
     </div>
   </div>
@@ -28,138 +30,165 @@
   <!-- HEADER -->
   <header id="site-header">
     <div class="header-inner">
-      <div class="logo">
-        <div class="logo-icon">📚</div>
+      <div class="logo" onclick="showHome()">
+        <div class="logo-mark">PV</div>
         <div>
           <div class="logo-title">PaperVault</div>
-          <div class="logo-sub" id="paper-count-label">Loading…</div>
+          <div class="logo-sub">Exam Archive</div>
         </div>
       </div>
-      <div style="display:flex; align-items:center; gap:10px;">
-        <div class="tab-group">
-          <button class="tab-btn active" data-tab="browse" onclick="switchTab('browse')">📖 Browse</button>
-          <button class="tab-btn"        data-tab="upload" id="upload-tab-btn" onclick="handleUploadTabClick()">⬆ Upload</button>
-        </div>
-        <!-- Admin status -->
-        <div id="admin-status" style="display:none;">
-          <span class="admin-badge">🔐 Admin</span>
-          <button class="logout-btn" onclick="logoutAdmin()">Logout</button>
-        </div>
+      <nav class="main-nav">
+        <button class="nav-btn active" data-page="home"   onclick="showHome()">Browse</button>
+        <button class="nav-btn"        data-page="stats"  onclick="showStats()">Stats</button>
+        <button class="nav-btn"        data-page="recent" onclick="showRecent()">Recent</button>
+        <button class="nav-btn upload-nav-btn" onclick="handleUploadClick()">+ Upload</button>
+      </nav>
+      <div id="admin-badge-wrap" style="display:none;" class="admin-badge-wrap">
+        <span class="admin-badge">Admin</span>
+        <button class="logout-btn" onclick="logoutAdmin()">× Logout</button>
       </div>
     </div>
   </header>
 
+  <!-- HERO -->
+  <div id="hero-section" class="hero-section">
+    <div class="hero-bg-lines"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">India's Exam Paper Archive</div>
+      <h1 class="hero-heading">Study Smarter.<br><em>Ace Every Exam.</em></h1>
+      <p class="hero-desc">Browse past papers, sample papers and practice questions — all in one place, completely free.</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><span class="hero-stat-num" id="stat-total">—</span><span class="hero-stat-label">Papers</span></div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat"><span class="hero-stat-num">6</span><span class="hero-stat-label">Exams</span></div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat"><span class="hero-stat-num">Free</span><span class="hero-stat-label">Always</span></div>
+      </div>
+    </div>
+  </div>
+
   <!-- MAIN -->
   <main id="main-content">
 
-    <!-- BROWSE -->
-    <section id="tab-browse" class="tab-section">
-      <div id="browse-home">
-        <div class="section-hero">
-          <h1 class="hero-title">Past Papers,<br><span class="accent">Organised.</span></h1>
-          <p class="hero-sub">Select a category to browse past papers, sample papers &amp; practice questions.</p>
-        </div>
-        <div class="category-grid" id="category-grid"></div>
+    <!-- HOME -->
+    <div id="page-home" class="page active-page">
+      <div class="section-label">Choose Your Exam</div>
+      <div class="category-grid" id="category-grid"></div>
+      <div id="recent-preview-section" style="display:none; margin-top:60px;">
+        <div class="section-label">Recently Added</div>
+        <div class="recent-list" id="recent-preview-list"></div>
       </div>
+    </div>
 
-      <div id="browse-category" style="display:none;">
-        <div class="cat-header">
-          <button class="back-btn" onclick="backToHome()">← Back</button>
-          <h2 class="cat-title" id="cat-title-label"></h2>
+    <!-- CATEGORY -->
+    <div id="page-category" class="page" style="display:none;">
+      <div class="cat-page-header">
+        <button class="back-btn" onclick="showHome()">← Back</button>
+        <div>
+          <div class="cat-page-eyebrow" id="cat-page-eyebrow"></div>
+          <h2 class="cat-page-title" id="cat-page-title"></h2>
         </div>
-        <div class="subtab-group">
-          <button class="subtab-btn active" data-subtab="past_papers"        onclick="switchSubTab('past_papers')">📄 Past Papers</button>
-          <button class="subtab-btn"        data-subtab="sample_papers"      onclick="switchSubTab('sample_papers')">🗂 Sample Papers</button>
-          <button class="subtab-btn"        data-subtab="practice_questions" onclick="switchSubTab('practice_questions')">✏️ Practice Questions</button>
-        </div>
-        <div class="search-row">
-          <input type="text" id="search-input" class="search-box"
-                 placeholder="Search by title, subject, or year…" oninput="renderPapers()" />
-        </div>
-        <div id="papers-list"></div>
       </div>
-    </section>
+      <div class="subtab-bar">
+        <button class="subtab-btn active" data-subtab="past_papers"        onclick="switchSubTab('past_papers')">📄 Past Papers</button>
+        <button class="subtab-btn"        data-subtab="sample_papers"      onclick="switchSubTab('sample_papers')">🗂 Sample Papers</button>
+        <button class="subtab-btn"        data-subtab="practice_questions" onclick="switchSubTab('practice_questions')">✏️ Practice Questions</button>
+      </div>
+      <div class="filter-bar">
+        <input type="text" id="search-input" class="search-box" placeholder="Search papers…" oninput="renderPapers()" />
+        <select id="filter-subject" class="filter-select" onchange="renderPapers()"><option value="">All Subjects</option></select>
+        <select id="sort-select" class="filter-select" onchange="renderPapers()">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="year_desc">Year ↓</option>
+          <option value="year_asc">Year ↑</option>
+        </select>
+      </div>
+      <div id="papers-list"></div>
+    </div>
 
-    <!-- UPLOAD (admin only) -->
-    <section id="tab-upload" class="tab-section" style="display:none;">
-      <div class="upload-wrap">
+    <!-- STATS -->
+    <div id="page-stats" class="page" style="display:none;">
+      <div class="section-label">Archive Statistics</div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="section-label" style="margin-top:48px;">Breakdown by Exam</div>
+      <div class="breakdown-list" id="breakdown-list"></div>
+    </div>
+
+    <!-- RECENT -->
+    <div id="page-recent" class="page" style="display:none;">
+      <div class="section-label">Recently Added Papers</div>
+      <div class="recent-list" id="recent-full-list"></div>
+    </div>
+
+    <!-- UPLOAD -->
+    <div id="page-upload" class="page" style="display:none;">
+      <div class="upload-page-inner">
         <div class="upload-hero">
+          <div class="section-label">Admin Panel</div>
           <h2 class="upload-title">Upload a Paper</h2>
-          <p class="upload-sub">Papers are stored in the cloud and visible to everyone instantly.</p>
+          <p class="upload-sub">Files are stored in the cloud and instantly available to everyone.</p>
         </div>
-
-        <div id="upload-success" class="success-banner" style="display:none;">
-          ✅ Paper uploaded! Everyone can now see and download it.
-        </div>
-        <div id="upload-error" class="error-banner" style="display:none;"></div>
-
-        <div class="form-group">
-          <label class="form-label">Exam Category *</label>
-          <select id="form-category" class="form-select" onchange="onCategoryChange()">
-            <option value="" disabled selected>Select exam type…</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Paper Type *</label>
-          <select id="form-papertype" class="form-select" onchange="checkUploadBtn()">
-            <option value="" disabled selected>Select paper type…</option>
-            <option value="past_papers">📄 Past Paper</option>
-            <option value="sample_papers">🗂 Sample Paper</option>
-            <option value="practice_questions">✏️ Practice Questions</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Subject *</label>
-          <select id="form-subject" class="form-select" disabled onchange="checkUploadBtn()">
-            <option value="" disabled selected>Select subject…</option>
-          </select>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Year *</label>
-            <input type="number" id="form-year" class="form-input"
-                   placeholder="2024" min="2000" max="2030" oninput="checkUploadBtn()" />
-          </div>
-          <div class="form-group form-group-wide">
-            <label class="form-label">Paper Title *</label>
-            <input type="text" id="form-title" class="form-input"
-                   placeholder="e.g. CBSE Mathematics Set 1" oninput="checkUploadBtn()" />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">File (PDF or Image) *</label>
-          <div class="upload-zone" onclick="document.getElementById('file-input').click()">
-            <div id="upload-zone-content">
-              <div class="upload-icon">📁</div>
-              <div class="upload-zone-text">Click to select file</div>
-              <div class="upload-zone-hint">PDF, PNG, JPG — max 5MB</div>
+        <div class="form-card">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Exam Category *</label>
+              <select id="form-category" class="form-select" onchange="onCategoryChange()"><option value="" disabled selected>Select exam…</option></select>
             </div>
-            <input type="file" id="file-input" accept=".pdf,.png,.jpg,.jpeg"
-                   style="display:none;" onchange="onFileSelect(event)" />
+            <div class="form-group">
+              <label class="form-label">Paper Type *</label>
+              <select id="form-papertype" class="form-select" onchange="checkUploadBtn()">
+                <option value="" disabled selected>Select type…</option>
+                <option value="past_papers">📄 Past Paper</option>
+                <option value="sample_papers">🗂 Sample Paper</option>
+                <option value="practice_questions">✏️ Practice Questions</option>
+              </select>
+            </div>
           </div>
-        </div>
-
-        <div id="upload-progress-wrap" style="display:none; margin-bottom:16px;">
-          <div class="progress-label" id="progress-label">Reading file…</div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Subject *</label>
+              <select id="form-subject" class="form-select" disabled onchange="checkUploadBtn()"><option value="" disabled selected>Select subject…</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Year *</label>
+              <input type="number" id="form-year" class="form-input" placeholder="2024" min="2000" max="2030" oninput="checkUploadBtn()" />
+            </div>
           </div>
+          <div class="form-group">
+            <label class="form-label">Paper Title *</label>
+            <input type="text" id="form-title" class="form-input" placeholder="e.g. CBSE Mathematics Set 1 — 2024" oninput="checkUploadBtn()" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">File * <span class="form-hint">PDF, PNG, JPG — max 5MB</span></label>
+            <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+              <div id="upload-zone-content">
+                <div class="uz-icon">📁</div>
+                <div class="uz-text">Click or drag to upload</div>
+                <div class="uz-hint">Supports PDF, PNG, JPG up to 5MB</div>
+              </div>
+              <input type="file" id="file-input" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="onFileSelect(event)" />
+            </div>
+          </div>
+          <div id="upload-progress-wrap" style="display:none; margin-bottom:16px;">
+            <div class="progress-header">
+              <span class="progress-label" id="progress-label">Uploading…</span>
+              <span class="progress-pct" id="progress-pct">0%</span>
+            </div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar-fill"></div></div>
+          </div>
+          <button class="upload-btn" id="upload-btn" onclick="handleUpload()" disabled>Upload Paper →</button>
         </div>
-
-        <button class="upload-btn" id="upload-btn" onclick="handleUpload()" disabled>
-          ⬆ Upload Paper
-        </button>
       </div>
-    </section>
+    </div>
 
   </main>
 
   <footer>
-    PaperVault — Past Papers Archive &nbsp;·&nbsp; Powered by Supabase
+    <div class="footer-inner">
+      <div class="footer-logo">PaperVault</div>
+      <div class="footer-text">Free exam papers for every Indian student · Powered by Supabase</div>
+    </div>
   </footer>
 
   <script src="app.js"></script>
