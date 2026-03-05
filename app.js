@@ -1,6 +1,10 @@
 /* ============================================================
-   PaperVault — app.js  (Supabase DB, no storage bucket)
+   PaperVault — app.js
+   Admin password: change ADMIN_PASSWORD below to whatever you want
    ============================================================ */
+
+// ⚠️ CHANGE THIS to your own secret password
+const ADMIN_PASSWORD = "papervault2024";
 
 const SUPABASE_URL  = "https://kexjjrdvvakqwbmzvyka.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtleGpqcmR2dmFrcXdibXp2eWthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MDQxNDksImV4cCI6MjA4ODI4MDE0OX0.dNyIkoZpsMer5XHSp3izw3bsuw2Nc_ShwzRg6ytA1ec";
@@ -12,8 +16,10 @@ const HEADERS = {
   "Prefer":        "return=representation",
 };
 
-async function dbSelect(filter) {
-  const url = `${SUPABASE_URL}/rest/v1/papers?select=id,uploaded_at,title,category,paper_type,subject,year,filename,file_size${filter ? "&" + filter : ""}&order=uploaded_at.desc`;
+// ─── SUPABASE ────────────────────────────────────────────────
+
+async function dbSelect() {
+  const url = `${SUPABASE_URL}/rest/v1/papers?select=id,uploaded_at,title,category,paper_type,subject,year,filename,file_size&order=uploaded_at.desc`;
   const res = await fetch(url, { headers: HEADERS });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
@@ -73,29 +79,71 @@ let allPapers     = [];
 let selectedCatId = null;
 let activeSubTab  = "past_papers";
 let selectedFile  = null;
+let isAdmin       = false;
 
 // ─── INIT ────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Check if already logged in this session
+  if (sessionStorage.getItem("pv_admin") === "true") {
+    isAdmin = true;
+    showAdminUI();
+  }
   populateCategorySelect();
   fetchPapers();
 });
 
-async function fetchPapers() {
-  setCountLabel("Loading…");
-  try {
-    allPapers = await dbSelect();
-    setCountLabel(allPapers.length + " paper" + (allPapers.length !== 1 ? "s" : "") + " archived");
-    buildCategoryGrid();
-    if (selectedCatId) renderPapers();
-  } catch (e) {
-    setCountLabel("Error loading");
-    showError("Could not load papers: " + e.message);
+// ─── ADMIN AUTH ──────────────────────────────────────────────
+
+function handleUploadTabClick() {
+  if (isAdmin) {
+    switchTab("upload");
+  } else {
+    openAdminModal();
   }
 }
 
-function setCountLabel(txt) {
-  document.getElementById("paper-count-label").textContent = txt;
+function openAdminModal() {
+  document.getElementById("admin-modal").style.display = "flex";
+  document.getElementById("admin-password-input").value = "";
+  document.getElementById("login-error").style.display = "none";
+  setTimeout(() => document.getElementById("admin-password-input").focus(), 100);
+}
+
+function closeAdminModal() {
+  document.getElementById("admin-modal").style.display = "none";
+}
+
+function attemptLogin() {
+  const input = document.getElementById("admin-password-input").value;
+  if (input === ADMIN_PASSWORD) {
+    isAdmin = true;
+    sessionStorage.setItem("pv_admin", "true");
+    closeAdminModal();
+    showAdminUI();
+    switchTab("upload");
+  } else {
+    document.getElementById("login-error").style.display = "block";
+    document.getElementById("admin-password-input").value = "";
+    document.getElementById("admin-password-input").focus();
+  }
+}
+
+function logoutAdmin() {
+  isAdmin = false;
+  sessionStorage.removeItem("pv_admin");
+  hideAdminUI();
+  switchTab("browse");
+}
+
+function showAdminUI() {
+  document.getElementById("admin-status").style.display = "flex";
+  document.getElementById("admin-status").style.alignItems = "center";
+  document.getElementById("admin-status").style.gap = "8px";
+}
+
+function hideAdminUI() {
+  document.getElementById("admin-status").style.display = "none";
 }
 
 // ─── TABS ────────────────────────────────────────────────────
@@ -111,6 +159,25 @@ function switchSubTab(sub) {
   document.querySelectorAll(".subtab-btn").forEach(b => b.classList.toggle("active", b.dataset.subtab === sub));
   document.getElementById("search-input").value = "";
   renderPapers();
+}
+
+// ─── FETCH ───────────────────────────────────────────────────
+
+async function fetchPapers() {
+  setCountLabel("Loading…");
+  try {
+    allPapers = await dbSelect();
+    setCountLabel(allPapers.length + " paper" + (allPapers.length !== 1 ? "s" : "") + " archived");
+    buildCategoryGrid();
+    if (selectedCatId) renderPapers();
+  } catch (e) {
+    setCountLabel("Error loading");
+    console.error(e);
+  }
+}
+
+function setCountLabel(txt) {
+  document.getElementById("paper-count-label").textContent = txt;
 }
 
 // ─── CATEGORY GRID ───────────────────────────────────────────
@@ -165,7 +232,8 @@ function openCategory(catId) {
   document.getElementById("browse-category").style.display = "block";
   document.getElementById("cat-title-label").textContent   = cat.icon + "  " + cat.label;
   document.getElementById("search-input").value            = "";
-  document.querySelectorAll(".subtab-btn").forEach(b => b.classList.toggle("active", b.dataset.subtab === "past_papers"));
+  document.querySelectorAll(".subtab-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.subtab === "past_papers"));
   renderPapers();
 }
 
@@ -193,7 +261,7 @@ function renderPapers() {
       <div class="empty-state fade-in">
         <div class="empty-icon">${query?"🔍":typeInfo.icon}</div>
         <div class="empty-title">${query?"No matching papers":"No "+typeInfo.label+" yet"}</div>
-        ${!query?`<div class="empty-hint">Upload ${typeInfo.label.toLowerCase()} using the Upload tab!</div>`:""}
+        ${!query?`<div class="empty-hint">${isAdmin?"Upload "+typeInfo.label.toLowerCase()+" using the Upload tab!":"No papers available yet."}</div>`:""}
       </div>`;
     return;
   }
@@ -210,6 +278,11 @@ function renderPapers() {
     const date = new Date(paper.uploaded_at).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
     const size = paper.file_size ? (paper.file_size/1024/1024).toFixed(2)+" MB" : "";
 
+    // Delete button only shown to admins
+    const deleteBtn = isAdmin
+      ? `<button class="btn-delete" onclick="deletePaper(${paper.id})">🗑</button>`
+      : "";
+
     card.innerHTML = `
       <div class="paper-file-icon" style="background:${cat.color}18;border:1px solid ${cat.color}33">${icon}</div>
       <div class="paper-info">
@@ -222,10 +295,12 @@ function renderPapers() {
         </div>
       </div>
       <div class="paper-actions">
-        <button class="btn-view"    onclick="viewPaper(${paper.id},'${escHtml(paper.filename)}')">👁 View</button>
-        <button class="btn-download" style="background:${cat.color}18;border:1px solid ${cat.color}44;color:${cat.color}"
-                onclick="downloadPaper(${paper.id},'${escHtml(paper.filename)}')">⬇ Download</button>
-        <button class="btn-delete"  onclick="deletePaper(${paper.id})">🗑</button>
+        <button class="btn-view"
+          onclick="viewPaper(${paper.id},'${escHtml(paper.filename)}')">👁 View</button>
+        <button class="btn-download"
+          style="background:${cat.color}18;border:1px solid ${cat.color}44;color:${cat.color}"
+          onclick="downloadPaper(${paper.id},'${escHtml(paper.filename)}')">⬇ Download</button>
+        ${deleteBtn}
       </div>`;
     listDiv.appendChild(card);
   });
@@ -261,6 +336,7 @@ async function downloadPaper(id, filename) {
 }
 
 async function deletePaper(id) {
+  if (!isAdmin) return;
   if (!confirm("Delete this paper? This cannot be undone.")) return;
   try {
     await dbDelete(id);
@@ -322,6 +398,7 @@ function checkUploadBtn() {
 }
 
 async function handleUpload() {
+  if (!isAdmin) return;
   const category  = document.getElementById("form-category").value;
   const paperType = document.getElementById("form-papertype").value;
   const subject   = document.getElementById("form-subject").value;
@@ -335,7 +412,6 @@ async function handleUpload() {
   showProgress(true);
 
   try {
-    // Read file as base64
     const fileData = await fileToBase64(selectedFile);
     setProgressBar(80, "Saving to database…");
 
@@ -351,7 +427,6 @@ async function handleUpload() {
     await fetchPapers();
     resetForm();
     showSuccess();
-
   } catch (e) {
     showError("Upload failed: " + e.message);
   }
@@ -376,26 +451,20 @@ function resetForm() {
     <div class="upload-zone-hint">PDF, PNG, JPG — max 5MB</div>`;
 }
 
-function showProgress(visible) {
-  document.getElementById("upload-progress-wrap").style.display = visible ? "block" : "none";
-}
-
+function showProgress(v) { document.getElementById("upload-progress-wrap").style.display = v?"block":"none"; }
 function setProgressBar(pct, label) {
-  document.getElementById("progress-bar-fill").style.width = pct + "%";
+  document.getElementById("progress-bar-fill").style.width = pct+"%";
   document.getElementById("progress-label").textContent    = label;
 }
-
 function showSuccess() {
   const el = document.getElementById("upload-success");
   el.style.display = "block";
-  setTimeout(() => { el.style.display = "none"; }, 4000);
+  setTimeout(()=>{ el.style.display="none"; }, 4000);
 }
-
 function showError(msg) {
   const el = document.getElementById("upload-error");
-  el.textContent = "❌ " + msg; el.style.display = "block";
+  el.textContent = "❌ "+msg; el.style.display = "block";
 }
-
 function hideMessages() {
   document.getElementById("upload-success").style.display = "none";
   document.getElementById("upload-error").style.display   = "none";

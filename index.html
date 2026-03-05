@@ -9,6 +9,23 @@
 </head>
 <body>
 
+  <!-- ADMIN LOGIN MODAL -->
+  <div id="admin-modal" style="display:none;">
+    <div class="modal-backdrop" onclick="closeAdminModal()"></div>
+    <div class="modal-box">
+      <div class="modal-title">🔐 Admin Login</div>
+      <div class="modal-sub">Enter the admin password to continue.</div>
+      <input type="password" id="admin-password-input" class="form-input"
+             placeholder="Enter password…" onkeydown="if(event.key==='Enter')attemptLogin()" />
+      <div id="login-error" class="login-error" style="display:none;">❌ Incorrect password</div>
+      <div class="modal-btns">
+        <button class="modal-cancel-btn" onclick="closeAdminModal()">Cancel</button>
+        <button class="modal-login-btn"  onclick="attemptLogin()">Login</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADER -->
   <header id="site-header">
     <div class="header-inner">
       <div class="logo">
@@ -18,13 +35,21 @@
           <div class="logo-sub" id="paper-count-label">Loading…</div>
         </div>
       </div>
-      <div class="tab-group">
-        <button class="tab-btn active" data-tab="browse" onclick="switchTab('browse')">📖 Browse</button>
-        <button class="tab-btn"        data-tab="upload" onclick="switchTab('upload')">⬆ Upload</button>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="tab-group">
+          <button class="tab-btn active" data-tab="browse" onclick="switchTab('browse')">📖 Browse</button>
+          <button class="tab-btn"        data-tab="upload" id="upload-tab-btn" onclick="handleUploadTabClick()">⬆ Upload</button>
+        </div>
+        <!-- Admin status -->
+        <div id="admin-status" style="display:none;">
+          <span class="admin-badge">🔐 Admin</span>
+          <button class="logout-btn" onclick="logoutAdmin()">Logout</button>
+        </div>
       </div>
     </div>
   </header>
 
+  <!-- MAIN -->
   <main id="main-content">
 
     <!-- BROWSE -->
@@ -55,7 +80,7 @@
       </div>
     </section>
 
-    <!-- UPLOAD -->
+    <!-- UPLOAD (admin only) -->
     <section id="tab-upload" class="tab-section" style="display:none;">
       <div class="upload-wrap">
         <div class="upload-hero">
