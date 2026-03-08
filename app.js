@@ -375,7 +375,15 @@ async function startQuiz(){
   btn.disabled=true;btn.textContent="Loading questions…";
   document.getElementById("quiz-no-questions").style.display="none";
   try{
-    const allQs=await dbGetQs(cat,subj);
+    let allQs=await dbGetQs(cat,subj);
+    // Fallback: if no results, try fetching all questions for this category (ignores subject filter)
+    if(!allQs||allQs.length===0){
+      allQs=await dbQ(`quiz_questions?category=eq.${encodeURIComponent(cat)}&order=id.asc`);
+    }
+    // Fallback 2: fetch ALL questions regardless of category/subject
+    if(!allQs||allQs.length===0){
+      allQs=await dbQ("quiz_questions?order=id.asc");
+    }
     if(!allQs||allQs.length===0){document.getElementById("quiz-no-questions").style.display="block";btn.disabled=false;btn.textContent="Start Quiz →";return;}
     quizQuestions=shuffle(allQs).slice(0,count);
     quizCurrent=0;quizScore=0;quizResults=[];quizStartTime=Date.now();
