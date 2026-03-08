@@ -366,31 +366,59 @@ function checkStartBtn(){
   const ok=document.getElementById("quiz-category").value&&document.getElementById("quiz-subject").value;
   document.getElementById("quiz-start-btn").disabled=!ok;
 }
+async function generateAIQuestions(cat, subj, count) {
+  const catObj = CATEGORIES.find(c => c.id === cat);
+  const catLabel = catObj ? catObj.label : cat;
+
+  const res = await fetch("/.netlify/functions/quiz", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ category: catLabel, subject: subj, count })
+  });
+
+  if (!res.ok) throw new Error("AI generation failed: " + await res.text());
+  return await res.json();
+}
+
 async function startQuiz(){
   const cat=document.getElementById("quiz-category").value;
   const subj=document.getElementById("quiz-subject").value;
   const count=parseInt(document.getElementById("quiz-count").value);
   quizTimePerQ=parseInt(document.getElementById("quiz-time").value);
   const btn=document.getElementById("quiz-start-btn");
-  btn.disabled=true;btn.textContent="Loading questions…";
+  btn.disabled=true;btn.textContent="🧠 Generating questions…";
   document.getElementById("quiz-no-questions").style.display="none";
+
+  // Show generating indicator
+  const genDiv=document.getElementById("quiz-generating");
+  if(genDiv)genDiv.style.display="flex";
+
   try{
-    let allQs=await dbGetQs(cat,subj);
-    // Fallback: if no results, try fetching all questions for this category (ignores subject filter)
-    if(!allQs||allQs.length===0){
-      allQs=await dbQ(`quiz_questions?category=eq.${encodeURIComponent(cat)}&order=id.asc`);
-    }
-    // Fallback 2: fetch ALL questions regardless of category/subject
-    if(!allQs||allQs.length===0){
-      allQs=await dbQ("quiz_questions?order=id.asc");
-    }
-    if(!allQs||allQs.length===0){document.getElementById("quiz-no-questions").style.display="block";btn.disabled=false;btn.textContent="Start Quiz →";return;}
-    quizQuestions=shuffle(allQs).slice(0,count);
+    // Always generate fresh AI questions
+    const aiQs = await generateAIQuestions(cat, subj, count);
+
+    // Also try to mix in any real PYQs from DB
+    let dbQs = [];
+    try { dbQs = await dbGetQs(cat, subj) || []; } catch(e) {}
+
+    // Merge: up to half from DB (real PYQs), rest from AI
+    const maxDB = Math.floor(count / 2);
+    const realQs = shuffle(dbQs).slice(0, maxDB);
+    const aiSlice = shuffle(aiQs).slice(0, count - realQs.length);
+    quizQuestions = shuffle([...realQs, ...aiSlice]);
+
+    if(!quizQuestions.length){ toast("Could not generate questions","error"); return; }
+
     quizCurrent=0;quizScore=0;quizResults=[];quizStartTime=Date.now();
     const catObj=CATEGORIES.find(c=>c.id===cat);
     document.getElementById("qa-category-label").textContent=(catObj?.label||cat)+" · "+subj;
+    if(genDiv)genDiv.style.display="none";
     showPage("quiz-active");loadQuestion();
-  }catch(e){toast("Could not load questions: "+e.message,"error");}
+  }catch(e){
+    if(genDiv)genDiv.style.display="none";
+    toast("Could not generate quiz: "+e.message,"error");
+    console.error(e);
+  }
   btn.disabled=false;btn.textContent="Start Quiz →";
 }
 
