@@ -10,7 +10,7 @@ const dbSelect  = ()=>dbQ("papers?select=id,uploaded_at,title,category,paper_typ
 const dbInsert  = row=>dbQ("papers",{method:"POST",body:JSON.stringify(row)});
 const dbGetFile = id=>dbQ(`papers?select=file_data&id=eq.${id}`).then(d=>d[0]?.file_data||null);
 const dbDelete  = id=>dbQ(`papers?id=eq.${id}`,{method:"DELETE"});
-const dbGetQs   = (cat,subj)=>dbQ(`quiz_questions?category=eq.${encodeURIComponent(cat)}&subject=eq.${encodeURIComponent(subj)}&order=random()`);
+const dbGetQs   = (cat,subj)=>dbQ(`quiz_questions?category=eq.${encodeURIComponent(cat)}&subject=eq.${encodeURIComponent(subj)}&order=id.asc`);
 const dbAddQ    = row=>dbQ("quiz_questions",{method:"POST",body:JSON.stringify(row)});
 const dbCountQs = ()=>dbQ("quiz_questions?select=id");
 const dbSaveScore=row=>dbQ("quiz_scores",{method:"POST",body:JSON.stringify(row)});
