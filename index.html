@@ -137,7 +137,7 @@
         <h3>Our Mission</h3>
         <p>Every year, millions of Indian students prepare for board exams and entrance tests. Access to previous year papers is one of the most effective study strategies, yet many students struggle to find them in one organised place. PaperVault solves that — for free, forever.</p>
         <h3>Contact Us</h3>
-        <p>Have a paper to contribute or found an issue? Reach out to us at <a href="/cdn-cgi/l/email-protection#a3c7c6d1d5d1c6d5c6d1c6e3c4cec2cacf8dc0ccce" class="static-link"><span class="__cf_email__" data-cfemail="660203141014031003140326010b070f0a4805090b">[email&#160;protected]</span></a></p>
+        <p>Have a paper to contribute or found an issue? Reach out to us at <a href="/cdn-cgi/l/email-protection#fe9a9b8c888c9b889b8c9bbe99939f9792d09d9193" class="static-link"><span class="__cf_email__" data-cfemail="c4a0a1b6b2b6a1b2a1b6a184a3a9a5ada8eaa7aba9">[email&#160;protected]</span></a></p>
       </div>
     </div>
   </div>
@@ -161,7 +161,7 @@
           <li><strong>Google Fonts</strong> — typography loaded from Google servers.</li>
         </ul>
         <h3>Contact</h3>
-        <p>Questions about this policy? Email us at <a href="/cdn-cgi/l/email-protection#294d4c5b5f5b4c5f4c5b4c694e44484045074a4644" class="static-link"><span class="__cf_email__" data-cfemail="274342555155425142554267404a464e4b0944484a">[email&#160;protected]</span></a></p>
+        <p>Questions about this policy? Email us at <a href="/cdn-cgi/l/email-protection#8febeafdf9fdeaf9eafdeacfe8e2eee6e3a1ece0e2" class="static-link"><span class="__cf_email__" data-cfemail="274342555155425142554267404a464e4b0944484a">[email&#160;protected]</span></a></p>
       </div>
     </div>
   </div>
@@ -228,7 +228,9 @@
   <div id="page-quiz" class="page" style="display:none;">
     <div class="section-label">Test Yourself</div>
     <h2 class="static-title" style="margin-bottom:8px;">Quiz Zone 🧠</h2>
-    <p style="color:var(--text2);font-size:15px;margin-bottom:32px;">Real PYQ-based MCQs. Pick your exam, set your difficulty, and beat the clock.</p>
+    <p style="color:var(--text2);font-size:15px;margin-bottom:32px;">AI searches public PYQ banks &amp; generates fresh questions — mixed together. Beat the 60-second clock.</p>
+
+    <!-- Username login -->
     <div id="quiz-login-wrap" class="quiz-login-card">
       <div class="quiz-login-icon">👤</div>
       <div class="quiz-login-title">Enter Your Username</div>
@@ -239,20 +241,57 @@
       </div>
       <div id="quiz-username-error" style="display:none;color:var(--red);font-size:13px;margin-top:8px;">Please enter a username (3–24 characters).</div>
     </div>
+
     <div id="quiz-setup-wrap" style="display:none;">
       <div class="quiz-user-bar">
         <span class="quiz-user-chip">👤 <span id="quiz-username-display"></span></span>
         <button class="quiz-change-user-btn" onclick="changeQuizUser()">Change</button>
         <button class="nav-btn" style="margin-left:auto;" onclick="showLeaderboard()">🏆 Leaderboard</button>
       </div>
-      <div class="quiz-setup-grid">
-        <div class="form-group"><label class="form-label">Exam *</label><select id="quiz-category" class="form-select" onchange="onQuizCategoryChange()"><option value="" disabled selected>Select exam…</option></select></div>
-        <div class="form-group"><label class="form-label">Subject *</label><select id="quiz-subject" class="form-select" disabled onchange="checkStartBtn()"><option value="" disabled selected>Select subject…</option></select></div>
-        <div class="form-group"><label class="form-label">Number of Questions</label><select id="quiz-count" class="form-select"><option value="5">5 Questions</option><option value="10" selected>10 Questions</option><option value="15">15 Questions</option><option value="20">20 Questions</option><option value="30">30 Questions</option></select></div>
-        <div class="form-group"><label class="form-label">Time Per Question</label><select id="quiz-time" class="form-select"><option value="30">30 seconds</option><option value="60" selected>60 seconds</option><option value="90">90 seconds</option><option value="120">2 minutes</option></select></div>
+
+      <!-- Mode selector -->
+      <div class="quiz-mode-tabs">
+        <button class="quiz-mode-tab active" data-mode="ai" onclick="setQuizMode('ai')">
+          <span class="qmt-icon">🤖</span>
+          <div><div class="qmt-label">AI + PYQ Mix</div><div class="qmt-sub">AI searches &amp; generates live</div></div>
+        </button>
+        <button class="quiz-mode-tab" data-mode="classic" onclick="setQuizMode('classic')">
+          <span class="qmt-icon">📚</span>
+          <div><div class="qmt-label">Classic Mode</div><div class="qmt-sub">From saved question bank</div></div>
+        </button>
       </div>
-      <button class="upload-btn" id="quiz-start-btn" onclick="startQuiz()" disabled style="max-width:280px;">Start Quiz →</button>
-      <div id="quiz-no-questions" style="display:none;margin-top:16px;color:var(--red);font-size:14px;">No questions available for this selection yet. Ask an admin to add some!</div>
+
+      <!-- Setup form -->
+      <div id="quiz-setup-wrap-inner">
+        <div class="quiz-setup-grid">
+          <div class="form-group"><label class="form-label">Exam *</label><select id="quiz-category" class="form-select" onchange="onQuizCategoryChange()"><option value="" disabled selected>Select exam…</option></select></div>
+          <div class="form-group"><label class="form-label">Subject *</label><select id="quiz-subject" class="form-select" disabled onchange="checkStartBtn()"><option value="" disabled selected>Select subject…</option></select></div>
+          <div class="form-group"><label class="form-label">Questions</label><select id="quiz-count" class="form-select"><option value="5">5 Questions</option><option value="10" selected>10 Questions</option><option value="15">15 Questions</option><option value="20">20 Questions</option></select></div>
+          <div class="form-group" id="timer-ai-row"><label class="form-label">Timer</label><div class="timer-fixed-badge">⏱ 60 seconds / question</div></div>
+          <div class="form-group" id="timer-classic-row" style="display:none;"><label class="form-label">Time Per Question</label><select id="quiz-time" class="form-select"><option value="30">30 seconds</option><option value="60" selected>60 seconds</option><option value="90">90 seconds</option><option value="120">2 minutes</option></select></div>
+        </div>
+        <input type="hidden" id="quiz-mode-input" value="ai"/>
+        <button class="upload-btn" id="quiz-start-btn" onclick="startQuiz()" disabled style="max-width:300px;">✨ Start AI Quiz →</button>
+        <div id="quiz-no-questions" style="display:none;margin-top:16px;color:var(--red);font-size:14px;">No questions found in bank. Try AI Mode — it generates them live!</div>
+      </div>
+
+      <!-- AI Loading State -->
+      <div id="ai-loading-state" style="display:none;">
+        <div class="ai-loader-card">
+          <div class="ai-loader-orb-wrap">
+            <div class="ai-loader-orb"></div>
+            <div class="ai-loader-orb-ring"></div>
+          </div>
+          <div class="ai-loader-title">Generating Your Quiz…</div>
+          <div class="ai-loader-status" id="ai-loader-status">🔍 Searching PYQ banks…</div>
+          <div class="ai-loader-bar-bg"><div class="ai-loader-bar-fill" id="ai-loader-bar-fill"></div></div>
+          <div class="ai-loader-pills">
+            <span class="q-badge q-badge-pyq">📌 Real PYQs</span>
+            <span style="color:var(--text3);font-size:20px;line-height:1">+</span>
+            <span class="q-badge q-badge-ai">🤖 AI Questions</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

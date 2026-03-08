@@ -43,7 +43,7 @@ const SUBJECTS={
 let allPapers=[],selectedCatId=null,activeSubTab="past_papers",selectedFile=null,isAdmin=false,currentPage="home";
 let quizUsername=sessionStorage.getItem("pv_quiz_user")||"";
 let quizQuestions=[],quizCurrent=0,quizScore=0,quizTimerInterval=null,quizTimeLeft=60,quizTimePerQ=60,quizAnswered=false,quizResults=[];
-let quizStartTime=0;
+let quizStartTime=0,quizMode="ai",aiStatusInterval=null;
 
 /* ── INIT ── */
 document.addEventListener("DOMContentLoaded",()=>{
@@ -366,60 +366,137 @@ function checkStartBtn(){
   const ok=document.getElementById("quiz-category").value&&document.getElementById("quiz-subject").value;
   document.getElementById("quiz-start-btn").disabled=!ok;
 }
-async function generateAIQuestions(cat, subj, count) {
-  const catObj = CATEGORIES.find(c => c.id === cat);
-  const catLabel = catObj ? catObj.label : cat;
+/* ════════════════════════════════════════════════════════════
+   AI QUIZ GENERATION
+   ════════════════════════════════════════════════════════════ */
 
-  const res = await fetch("/.netlify/functions/quiz", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ category: catLabel, subject: subj, count })
+const AI_STATUSES=[
+  "🔍 Searching public PYQ banks…",
+  "📚 Reading past exam papers…",
+  "🧠 Generating AI questions…",
+  "✨ Mixing PYQs with AI questions…",
+  "⚡ Finalising your quiz…"
+];
+
+function setQuizMode(mode){
+  quizMode=mode;
+  document.getElementById("quiz-mode-input").value=mode;
+  document.querySelectorAll(".quiz-mode-tab").forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
+  const isAI=mode==="ai";
+  document.getElementById("timer-ai-row").style.display=isAI?"block":"none";
+  document.getElementById("timer-classic-row").style.display=isAI?"none":"block";
+  const btn=document.getElementById("quiz-start-btn");
+  if(btn)btn.textContent=isAI?"✨ Start AI Quiz →":"Start Quiz →";
+}
+
+function startAILoadingUI(){
+  document.getElementById("quiz-setup-wrap-inner").style.display="none";
+  document.getElementById("ai-loading-state").style.display="block";
+  let idx=0,pct=5;
+  document.getElementById("ai-loader-status").textContent=AI_STATUSES[0];
+  document.getElementById("ai-loader-bar-fill").style.width="5%";
+  aiStatusInterval=setInterval(()=>{
+    pct=Math.min(pct+Math.random()*18,88);
+    document.getElementById("ai-loader-bar-fill").style.width=pct+"%";
+    idx=(idx+1)%AI_STATUSES.length;
+    const el=document.getElementById("ai-loader-status");
+    el.style.opacity="0";
+    setTimeout(()=>{el.textContent=AI_STATUSES[idx];el.style.opacity="1";},200);
+  },1800);
+}
+
+function stopAILoadingUI(success=true){
+  clearInterval(aiStatusInterval);
+  if(success){
+    document.getElementById("ai-loader-bar-fill").style.width="100%";
+    document.getElementById("ai-loader-status").textContent="✅ Questions ready!";
+  }
+  setTimeout(()=>{
+    document.getElementById("ai-loading-state").style.display="none";
+    document.getElementById("quiz-setup-wrap-inner").style.display="block";
+  },500);
+}
+
+async function generateAIQuestions(category,subject,count){
+  const res=await fetch("/.netlify/functions/generate-quiz",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({category,subject,count})
   });
-
-  if (!res.ok) throw new Error("AI generation failed: " + await res.text());
-  return await res.json();
+  if(!res.ok){
+    let err={error:"Request failed"};
+    try{err=await res.json();}catch(e){}
+    throw new Error(err.error||"AI quiz generation failed");
+  }
+  const data=await res.json();
+  if(!data.questions||!data.questions.length)throw new Error("No questions returned from AI");
+  return data.questions;
 }
 
 async function startQuiz(){
   const cat=document.getElementById("quiz-category").value;
   const subj=document.getElementById("quiz-subject").value;
   const count=parseInt(document.getElementById("quiz-count").value);
-  quizTimePerQ=parseInt(document.getElementById("quiz-time").value);
+  const mode=document.getElementById("quiz-mode-input").value;
   const btn=document.getElementById("quiz-start-btn");
-  btn.disabled=true;btn.textContent="🧠 Generating questions…";
+  btn.disabled=true;
   document.getElementById("quiz-no-questions").style.display="none";
 
-  // Show generating indicator
-  const genDiv=document.getElementById("quiz-generating");
-  if(genDiv)genDiv.style.display="flex";
+  /* ── AI MODE ── */
+  if(mode==="ai"){
+    startAILoadingUI();
+    try{
+      let questions=await generateAIQuestions(cat,subj,count);
+      // Also try mixing in DB questions as extra PYQs
+      try{
+        const dbQs=await dbGetQs(cat,subj);
+        if(dbQs&&dbQs.length){
+          const extras=shuffle(dbQs).slice(0,Math.floor(count/4)).map(q=>({...q,type:"pyq",source:q.source||"PaperVault PYQ"}));
+          questions=shuffle([...questions,...extras]).slice(0,count);
+        }
+      }catch(e){/* DB bonus failed, AI questions only — fine */}
+      quizQuestions=questions;
+      quizCurrent=0;quizScore=0;quizResults=[];quizStartTime=Date.now();
+      quizTimePerQ=60;
+      const catObj=CATEGORIES.find(c=>c.id===cat);
+      document.getElementById("qa-category-label").textContent=(catObj?.label||cat)+" · "+subj;
+      document.getElementById("ai-loader-bar-fill").style.width="100%";
+      document.getElementById("ai-loader-status").textContent="✅ Questions ready!";
+      clearInterval(aiStatusInterval);
+      setTimeout(()=>{
+        document.getElementById("ai-loading-state").style.display="none";
+        document.getElementById("quiz-setup-wrap-inner").style.display="block";
+        showPage("quiz-active");loadQuestion();
+      },600);
+    }catch(e){
+      stopAILoadingUI(false);
+      toast("AI quiz failed: "+e.message,"error");
+      // Fallback to classic
+      toast("Trying classic mode…","info");
+      await startClassicQuiz(cat,subj,count);
+    }
+    btn.disabled=false;
+    return;
+  }
 
+  /* ── CLASSIC MODE ── */
+  btn.textContent="Loading…";
+  await startClassicQuiz(cat,subj,count);
+  btn.disabled=false;
+  btn.textContent="Start Quiz →";
+}
+
+async function startClassicQuiz(cat,subj,count){
   try{
-    // Always generate fresh AI questions
-    const aiQs = await generateAIQuestions(cat, subj, count);
-
-    // Also try to mix in any real PYQs from DB
-    let dbQs = [];
-    try { dbQs = await dbGetQs(cat, subj) || []; } catch(e) {}
-
-    // Merge: up to half from DB (real PYQs), rest from AI
-    const maxDB = Math.floor(count / 2);
-    const realQs = shuffle(dbQs).slice(0, maxDB);
-    const aiSlice = shuffle(aiQs).slice(0, count - realQs.length);
-    quizQuestions = shuffle([...realQs, ...aiSlice]);
-
-    if(!quizQuestions.length){ toast("Could not generate questions","error"); return; }
-
+    const allQs=await dbGetQs(cat,subj);
+    if(!allQs||!allQs.length){document.getElementById("quiz-no-questions").style.display="block";return;}
+    quizQuestions=shuffle(allQs).slice(0,count);
     quizCurrent=0;quizScore=0;quizResults=[];quizStartTime=Date.now();
+    quizTimePerQ=parseInt(document.getElementById("quiz-time")?.value||60);
     const catObj=CATEGORIES.find(c=>c.id===cat);
     document.getElementById("qa-category-label").textContent=(catObj?.label||cat)+" · "+subj;
-    if(genDiv)genDiv.style.display="none";
     showPage("quiz-active");loadQuestion();
-  }catch(e){
-    if(genDiv)genDiv.style.display="none";
-    toast("Could not generate quiz: "+e.message,"error");
-    console.error(e);
-  }
-  btn.disabled=false;btn.textContent="Start Quiz →";
+  }catch(e){toast("Could not load questions: "+e.message,"error");}
 }
 
 /* ── Active Quiz ── */
@@ -430,7 +507,12 @@ function loadQuestion(){
   const total=quizQuestions.length;
   document.getElementById("qa-question-num").textContent=`Question ${quizCurrent+1} / ${total}`;
   document.getElementById("quiz-progress-fill").style.width=((quizCurrent/total)*100)+"%";
-  document.getElementById("quiz-q-source").textContent=q.source?"📌 "+q.source:"📝 Quiz Question";
+  document.getElementById("quiz-q-source").innerHTML=
+    q.type==="pyq"
+      ? `<span class="q-badge q-badge-pyq">📌 PYQ</span>&ensp;<span style="color:var(--text3);font-size:12px">${escHtml(q.source||"")}</span>`
+      : q.type==="ai"
+        ? `<span class="q-badge q-badge-ai">🤖 AI Generated</span>`
+        : escHtml(q.source?"📌 "+q.source:"📝 Quiz Question");
   document.getElementById("quiz-q-text").textContent=q.question;
   document.getElementById("quiz-explanation-box").style.display="none";
   const opts=document.getElementById("quiz-options");opts.innerHTML="";
